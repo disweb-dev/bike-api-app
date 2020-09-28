@@ -1,26 +1,36 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
+import axios from "axios"
+
 import GoogleMapReact from "google-map-react";
 
 import Pin from "./Pin";
 
 import mapStyle from "../../misc/mapStyle";
 
-// FOR DEV ONLY
-import stationsStatic from "../../misc/stationsStatic.json";
-import availabilityStatic from "../../misc/availabilityStatic.json";
-
-// TO BE MOVED TO WHERE DATA IS FETCHED
 const combinedStationsAvailabilityData = (
-  stations = stationsStatic.data.stations,
-  availability = availabilityStatic.data.stations
+  stationsToFetch,
+  availabilityToFetch
 ) => {
-  return stations.map((station, index) => {
-    return { ...availability[index], ...station };
+  console.log(stationsToFetch)
+  return stationsToFetch.map((station, index) => {
+    return { ...availabilityToFetch[index], ...station };
   });
 };
 
+
 const Map = () => {
-  const pins = combinedStationsAvailabilityData().map(
+
+  const [stations, setStations] = useState([])
+
+  useEffect(async () => {
+    const responseStations = await axios.get(`https://gbfs.urbansharing.com/oslobysykkel.no/station_information.json`)
+    const responseAvailability = await axios.get(`https://gbfs.urbansharing.com/oslobysykkel.no/station_status.json`)
+
+    const combinedStations = combinedStationsAvailabilityData(responseStations.data.data.stations, responseAvailability.data.data.stations)
+    setStations(combinedStations)
+  }, [])
+
+  const pins = stations.map(
     (
       {
         address,
